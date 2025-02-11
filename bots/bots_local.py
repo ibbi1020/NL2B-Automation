@@ -1,5 +1,5 @@
 # import the required libraries
-from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
 from langchain.globals import set_debug
 from langchain.prompts import PromptTemplate
 import matplotlib.pyplot as plt
@@ -7,12 +7,6 @@ import networkx as nx
 import json
 import prompts
 import os
-
-# get openai key from environment variable
-import os
-openai_key = os.environ.get("OPENAI_API_KEY")
-if openai_key is None:
-    raise ValueError("Please set OPENAI_API_KEY environment variable")
 
 set_debug(True)
 
@@ -47,22 +41,18 @@ def render_visuals(visuals_json, output_dir="output"):
 
 def generate_blog(newsletter_text):
     """Generates a blog from the given newsletter text"""
-    model = ChatOpenAI(model ="gpt-4",
+    model = ChatOllama(model ="deepseek-r1:8b",
                    temperature = 0)
     
     prompt = prompts.blog_prompt.format(newsletter_text = newsletter_text)
     
-    response = []
-    for chunk in model.stream(prompt):
-        response.append(chunk)
-        #print(chunk.content, flush=True)
-
+    response = model.invoke(prompt)
     return response
 
 def generate_metadata(blog_output):
     """Generates metadata for blog based on initial blog output"""
     
-    model = ChatOpenAI(model ="gpt-3.5-turbo",
+    model = ChatOllama(model ="deepseek-r1:8b",
                    temperature = 0)
     
     prompt = prompts.metadata_prompt.format(blog_output = blog_output)
@@ -73,7 +63,7 @@ def generate_metadata(blog_output):
 def generate_visuals(blog_output):
     """Identifies placeholders in the blog and generates JSON for diagrams <library TBD>"""
     
-    model = ChatOpenAI(model="gpt-4", temperature=0)
+    model = ChatOllama(model="deepseek-r1:8b", temperature=0)
     
     #Fetch prompt template
     visuals_prompt = PromptTemplate.from_template(prompts.visual_prompt)

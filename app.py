@@ -1,5 +1,5 @@
 import streamlit as st
-from bots import bots 
+from bots import bots_local 
 
 # Streamlit UI
 st.title("Newsletter to Blog Converter (NEW)")
@@ -12,7 +12,7 @@ st.cache_data.clear()
 if st.button("Generate Blog"):
     if newsletter_input.strip():
         with st.spinner("Generating blog..."):
-            blog_output = bots.generate_blog(newsletter_input)
+            blog_output = bots_local.generate_blog(newsletter_input)
             #st.subheader("Generated Blog:")
             #st.write(blog_output)
             
@@ -20,9 +20,8 @@ if st.button("Generate Blog"):
             #st.subheader("Generated Metadata: ")
             #st.write(metadata_output)
             
-            visual_output = bots.generate_visuals(blog_output)
-            st.subheader("Generated Visual: ")
-            st.write(visual_output)
+            bots_local.generate_visuals(blog_output)
+            st.subheader("Visuals saved to output folder")
     else:
         st.warning("Please enter some text to generate a blog.")
         

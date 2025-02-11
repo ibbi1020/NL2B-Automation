@@ -39,29 +39,58 @@ Ensure that the metadata remains aligned with the content of the blog post. Here
 <<<Output only valid JSON format, nothing else.>>>
 """
 
-visual_prompt = f"""
-You are an AI assistant that identifies placeholders in a blog post and generates **PyGraphviz** diagrams.
+visual_prompt = """
+You are an AI assistant that identifies placeholders in a blog post and generates **Matplotlib + NetworkX** diagrams.
 
 ### Task:
 1. Identify all placeholders in the format `[VISUAL_n: Description]` in the blog post.
-2. Generate an **accurate** and **simple** Graphviz diagram for each.
-3. Return the results in **valid JSON format**.
+2. Generate an **accurate** and **simple** NetworkX diagram for each.
+3. Ensure the code **does NOT include import statements** for `matplotlib.pyplot` (`plt`) or `networkx` (`nx`).
+4. Return the results in **valid JSON format**, where the key `"python_code"` contains the generated code.
 
 ### **Example Output:**
 Visuals:
-- ID: "VISUAL_1"
-  - Description: "Workflow diagram showing AI pipeline steps"
-  - Graphviz Code: `digraph G <curly_brace> Newsletter -> Blog_Generator; Blog_Generator -> Mermaid_Generator; <curly_brace`
-  - Caption: "AI pipeline for transforming newsletters into structured blogs."
+- ID: `"VISUAL_1"`
+  - Description: `"Workflow diagram showing AI pipeline steps"`
+  - Python Code:
+    ```python
+    G = nx.DiGraph()
+    G.add_edges_from([
+        ("Newsletter", "Blog Generator"),
+        ("Blog Generator", "Mermaid Generator")
+    ])
 
-- ID: "VISUAL_2"
-  - Description: "Comparison table for different AI models"
-  - Graphviz Code: `digraph G <curly_brace> GPT [shape=box]; DeepSeek [shape=ellipse]; GPT -> DeepSeek; <curly_brace>`
-  - Caption: "Comparison between GPT and DeepSeek AI models."
+    plt.figure(figsize=(6, 4))
+    pos = nx.spring_layout(G, seed=42)
+    nx.draw(G, pos, with_labels=True, node_color="lightblue", edge_color="gray", node_size=2000, font_size=10)
+    plt.savefig("outputs")
+    plt.close()
+    ```
+  - Caption: `"AI pipeline for transforming newsletters into structured blogs."`
+
+- ID: `"VISUAL_2"`
+  - Description: `"Comparison between different AI models"`
+  - Python Code:
+    ```python
+    G = nx.Graph()
+    G.add_edges_from([
+        ("GPT", "DeepSeek")
+    ])
+
+    plt.figure(figsize=(4, 4))
+    pos = nx.spring_layout(G, seed=42)
+    nx.draw(G, pos, with_labels=True, node_color="lightcoral", edge_color="black", node_size=2000, font_size=10)
+    plt.savefig("outputs")
+    plt.close()
+    ```
+  - Caption: `"Comparison between GPT and DeepSeek AI models."`
 
 ### **Output Rules:**
 - Output **only** valid JSON.
 - Do **not** include explanations or extra text.
+- The `"python_code"` field **must be executable** without modifications.
+- The code **must NOT** include any matplotlib or networkx import statements, any other necessary imports you are allowed to use.
+- The code **must include `plt.savefig("outputs")`** to ensure the figure is saved correctly.
 
 ### **Blog Post:**
 {blog_output}
