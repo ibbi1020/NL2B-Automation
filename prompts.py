@@ -1,7 +1,7 @@
 newsletter_text = ""
 blog_output = ""
 
-blog_prompt = f"""
+blog_prompt = """
     <<<Convert the following newsletter into a well-structured blog post while maintaining clarity, improving readability, and keeping the original intent intact. 
 Ensure the content follows a logical flow and is engaging to read. 
 

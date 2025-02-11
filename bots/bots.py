@@ -14,18 +14,16 @@ openai_key = os.environ.get("OPENAI_API_KEY")
 if openai_key is None:
     raise ValueError("Please set OPENAI_API_KEY environment variable")
 
-set_debug(True)
-
+bot_local = ""
+bot_remote = "gpt-4o"
 
 ## BOT FUNCTIONS
 
-def render_visuals(visuals_json, output_dir="output"):
+def render_visuals(visuals_json, output_dir="./outputs"):
     """Executes Python visualization code from JSON and saves outputs locally."""
     os.makedirs(output_dir, exist_ok=True)  # Ensure the output folder exists
 
-    visuals = visuals_json.get("visuals", [])
-
-    for visual in visuals:
+    for visual in visuals_json:
         visual_id = visual["id"]
         python_code = visual["python_code"]  # Extract code
 
@@ -36,34 +34,34 @@ def render_visuals(visuals_json, output_dir="output"):
         if 'plt.savefig("outputs")' not in python_code:
             print(f"Warning: {visual_id} does not contain '{{output_path}}'. Using default output path.")
             python_code = python_code + f"\nplt.savefig('{output_path}')\nplt.close()"
+        else:
+            python_code = python_code.replace('plt.savefig("outputs")', f'plt.savefig("{output_path}")')
 
         # Execute the visualization code
         try:
-            exec(python_code, {"plt": plt, "nx": nx, "__builtins__": {}})  # Provide plt and nx explicitly
+            exec(python_code, {"plt": plt, "nx": nx, "__builtins__": {}})
             print(f"Generated: {output_path}")
         except Exception as e:
             print(f"Error generating {visual_id}: {e}")
     
 
-def generate_blog(newsletter_text):
+def generate_blog(nl_text):
     """Generates a blog from the given newsletter text"""
-    model = ChatOpenAI(model ="gpt-4",
-                   temperature = 0)
     
-    prompt = prompts.blog_prompt.format(newsletter_text = newsletter_text)
+    model = ChatOpenAI(model =bot_remote, temperature = 0)
+    
+    prompt = prompts.blog_prompt.format(newsletter_text = nl_text)
     
     response = []
     for chunk in model.stream(prompt):
         response.append(chunk)
-        #print(chunk.content, flush=True)
 
     return response
 
 def generate_metadata(blog_output):
     """Generates metadata for blog based on initial blog output"""
     
-    model = ChatOpenAI(model ="gpt-3.5-turbo",
-                   temperature = 0)
+    model = ChatOpenAI(model = bot_remote, temperature = 0)
     
     prompt = prompts.metadata_prompt.format(blog_output = blog_output)
     
@@ -73,7 +71,7 @@ def generate_metadata(blog_output):
 def generate_visuals(blog_output):
     """Identifies placeholders in the blog and generates JSON for diagrams <library TBD>"""
     
-    model = ChatOpenAI(model="gpt-4", temperature=0)
+    model = ChatOpenAI(model=bot_remote, temperature=0)
     
     #Fetch prompt template
     visuals_prompt = PromptTemplate.from_template(prompts.visual_prompt)
@@ -83,17 +81,21 @@ def generate_visuals(blog_output):
     
     # Generate response
     response = model.invoke(formatted_prompt)
-    print(response.content)
     
     # Parse response into JSON format
     try:
-        # Parse JSON
-        visuals_json = json.loads(response.content)
+        # Clean output from leading and trailing characters
+        content_str = response.content.strip('```')
+        content_str = content_str.strip('json')
+        content_str = content_str.strip()
+        
+        # load JSON 
+        visuals_json = json.loads(content_str)
+        
+        # Call render function
         render_visuals(visuals_json.get("visuals", [])) #call render function 
-        #return visuals_json.get("visuals", [])  # Avoid KeyError
+        
     except json.JSONDecodeError as e:
         print(f"JSON Parsing Error: {e}")
-        return []
 
-    return visuals_json
 
