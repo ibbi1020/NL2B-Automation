@@ -1,5 +1,5 @@
 from langchain_openai import ChatOpenAI
-from langchain.prompts import PromptTemplate
+from langchain.schema import SystemMessage, HumanMessage
 import json
 from typing import List, Dict
 from .utils import render_visuals
@@ -15,10 +15,12 @@ def generate_visuals(blog_output: str) -> None:
     """
     model = ChatOpenAI(model=BOT_REMOTE, temperature=0)
     
-    visuals_prompt = PromptTemplate.from_template(prompts.visual_prompt)
-    formatted_prompt = visuals_prompt.format(blog_output=blog_output)
+    messages = [
+        SystemMessage(content=prompts.visual_prompt),
+        HumanMessage(content=str(blog_output))
+    ]
     
-    response = model.invoke(formatted_prompt)
+    response = model.invoke(messages)
     
     try:
         content_str = (response.content

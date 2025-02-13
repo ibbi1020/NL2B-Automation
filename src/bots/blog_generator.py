@@ -1,4 +1,5 @@
 from langchain_openai import ChatOpenAI
+from langchain.schema import SystemMessage, HumanMessage
 from ..config.settings import BOT_REMOTE
 import prompts
 
@@ -13,9 +14,12 @@ def generate_blog(nl_text: str) -> list:
         list: Generated blog content chunks
     """
     model = ChatOpenAI(model=BOT_REMOTE, temperature=0)
-    prompt = prompts.blog_prompt.format(newsletter_text=nl_text)
+    messages = [
+        SystemMessage(content=prompts.blog_prompt),
+        HumanMessage(content=str(nl_text))
+    ]
     
-    return [chunk for chunk in model.stream(prompt)]
+    return [chunk for chunk in model.stream(messages)]
 
 def generate_metadata(blog_output: str) -> str:
     """
@@ -28,6 +32,9 @@ def generate_metadata(blog_output: str) -> str:
         str: Generated metadata
     """
     model = ChatOpenAI(model=BOT_REMOTE, temperature=0)
-    prompt = prompts.metadata_prompt.format(blog_output=blog_output)
+    messages = [
+        SystemMessage(content=prompts.metadata_prompt),
+        HumanMessage(content=str(blog_output))
+    ]
     
-    return model.invoke(prompt)
+    return [chunk for chunk in model.stream(messages)]
